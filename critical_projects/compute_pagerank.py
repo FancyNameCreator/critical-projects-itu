@@ -1,11 +1,9 @@
-import os
-import csv
 from neo4j import GraphDatabase
 from critical_projects import INCLUDED_PLATFORMS, NUMBER_OF_PROJECTS
 
 
 uri = "neo4j://localhost:7687"
-driver = GraphDatabase.driver(uri, auth=("neo4j", "password"))
+driver = GraphDatabase.driver(uri, auth=("neo4j", "6P87!xHs9f!CckgS"))
 
 
 def create_graph_view(tx, platform):
@@ -33,12 +31,12 @@ def main():
         for platform in INCLUDED_PLATFORMS:
             print(f"Computing pagerank for {platform}...")
             try:
-                r = session.read_transaction(create_graph_view, platform)
+                r = session.execute_read(create_graph_view, platform)
             except Exception as e:
                 print(e)
 
             try:
-                r = session.write_transaction(compute_pagerank, platform)
+                r = session.execute_write(compute_pagerank, platform)
             except Exception as e:
                 print(e)
 

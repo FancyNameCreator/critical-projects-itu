@@ -18,72 +18,78 @@ https://libraries.io/data#projectFields
 import os
 import csv
 import sys
+import time
 from critical_projects import INCLUDED_PLATFORMS
 
 
-def main(fname):
-    csv_writer = csv.writer(sys.stdout)
+def main(to_path_file, from_path_file):
 
-    header_line = (
-        ":ID,:LABEL,Name,CreatedTS,RepoURL,VersionsCount,SourceRank,"
-        + "DependentProjectsCount,Language,Status,DependentRepositoriesCount"
-    )
-    print(header_line)
-    with open(fname) as fp:
-        csv_reader = csv.reader(fp, delimiter=",")
-        next(csv_reader)  # Skip the header line
-        for row in csv_reader:
-            #      ['ID', 'Platform', 'Name', 'Created Timestamp', 'Updated Timestamp',
-            # 'Description', 'Keywords', 'Homepage URL', 'Licenses', 'Repository URL',
-            # 'Versions Count', 'SourceRank', 'Latest Release Publish Timestamp',
-            # 'Latest Release Number', 'Package Manager ID',
-            # 'Dependent Projects Count', 'Language', 'Status',
-            # 'Last synced Timestamp', 'Dependent Repositories Count',
-            # 'Repository ID']
-            (
-                iD,
-                platform,
-                name,
-                created_timestamp,
-                _,
-                _,
-                _,
-                _,
-                _,
-                repository_url,
-                versions_count,
-                sourcerank,
-                _,
-                _,
-                _,
-                dependent_projects_count,
-                language,
-                status,
-                _,
-                dependent_repositories_count,
-                _,
-            ) = row
-            if platform in INCLUDED_PLATFORMS:
-                csv_writer.writerow(
-                    (
-                        iD,
-                        platform,
-                        name,
-                        created_timestamp,
-                        repository_url,
-                        versions_count,
-                        sourcerank,
-                        dependent_projects_count,
-                        language,
-                        status,
-                        dependent_repositories_count,
+    header_line = (":ID", ":LABEL", "Name", "CreatedTS", "RepoURL", "VersionsCount", "SourceRank", "DependentProjectsCount", "Language", "Status", "DependentRepositoriesCount")
+
+    with open(to_path_file, "w+", encoding="utf-8") as fdest:
+        csv_writer = csv.writer(fdest)
+        csv_writer.writerow(header_line)
+
+        with open(from_path_file, "r", encoding="utf-8") as fp:
+            csv_reader = csv.reader(fp, delimiter=",")
+            next(csv_reader)  # Skip the header line
+            for row in csv_reader:
+                #      ['ID', 'Platform', 'Name', 'Created Timestamp', 'Updated Timestamp',
+                # 'Description', 'Keywords', 'Homepage URL', 'Licenses', 'Repository URL',
+                # 'Versions Count', 'SourceRank', 'Latest Release Publish Timestamp',
+                # 'Latest Release Number', 'Package Manager ID',
+                # 'Dependent Projects Count', 'Language', 'Status',
+                # 'Last synced Timestamp', 'Dependent Repositories Count',
+                # 'Repository ID']
+                (
+                    iD,
+                    platform,
+                    name,
+                    created_timestamp,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    repository_url,
+                    versions_count,
+                    sourcerank,
+                    _,
+                    _,
+                    _,
+                    dependent_projects_count,
+                    language,
+                    status,
+                    _,
+                    dependent_repositories_count,
+                    _,
+                ) = row
+                if platform in INCLUDED_PLATFORMS:
+                    csv_writer.writerow(
+                        (
+                            iD,
+                            platform,
+                            name,
+                            created_timestamp,
+                            repository_url,
+                            versions_count,
+                            sourcerank,
+                            dependent_projects_count,
+                            language,
+                            status,
+                            dependent_repositories_count,
+                        )
                     )
-                )
 
 
 if __name__ == "__main__":
-    projects_csv_file = sys.argv[1]
-    if os.path.isfile(projects_csv_file):
-        main(projects_csv_file)
+    source_csv_file = sys.argv[1]
+    dest_csv_file = sys.argv[2]
+
+    print(source_csv_file, dest_csv_file)
+    time.sleep(2)
+
+    if os.path.isfile(source_csv_file):
+        main(from_path_file=source_csv_file, to_path_file=dest_csv_file)
     else:
         print(__doc__)

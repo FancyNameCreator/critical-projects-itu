@@ -3,7 +3,7 @@ import yaml
 
 CONF_FILE = "analysis_conf.yml"
 
-with open(CONF_FILE) as fp:
+with open(CONF_FILE, encoding='utf8') as fp:
     conf = yaml.safe_load(fp)
 
 

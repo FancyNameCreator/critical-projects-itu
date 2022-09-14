@@ -10,9 +10,9 @@ then
   exit 1
 fi
 
-
+# Szymon comment: I did the following 16 lines manually.
 echo "The following will take some time! Go do something else..."
-echo "" 
+echo ""
 echo "Downloading the dataset..."
 wget --no-check-certificate -P ./data/input https://zenodo.org/record/3626071/files/libraries-1.6.0-2020-01-12.tar.gz
 echo "Extracting the dataset..."
@@ -32,13 +32,14 @@ fi
 
 
 echo "Generating Neo4j input data..."
-python -m critical_projects.projects_to_neo4j_csv data/input/projects-1.6.0-2020-01-12.csv > data/processing/projects_neo4j.csv
-python -m critical_projects.deps_to_neo4j_csv data/input/dependencies-1.6.0-2020-01-12.csv > data/processing/deps_neo4j.csv
+python -m critical_projects.projects_to_neo4j_csv data/input/projects-1.6.0-2020-01-12.csv data/processing/projects_neo4j.csv
+python -m critical_projects.deps_to_neo4j_csv data/input/dependencies-1.6.0-2020-01-12.csv data/processing/deps_neo4j.csv
 
 echo "Generating cypher queries..."
 python -m critical_projects.create_neo4j_indexes > data/processing/create_indexes.cql
 
 
+# Szymon comment: Following 5 lines were also manual for me on Windows
 echo "Setting up Neo4j DB..."
 # Getting the Neo4j plugin with the PageRank algorithm
 wget --no-check-certificate -P ./neo4j/plugins https://s3-eu-west-1.amazonaws.com/com.neo4j.graphalgorithms.dist/graph-data-science/neo4j-graph-data-science-1.4.1-standalone.zip
@@ -47,6 +48,7 @@ rm ./neo4j/plugins/neo4j-graph-data-science-1.4.1-standalone.zip
 
 
 # Starting container for DBMS
+# Szymon comment: If you wish you can change the password
 docker run \
     --name depgraphneo4j \
     -p7474:7474 -p7687:7687 \
@@ -57,7 +59,7 @@ docker run \
     -v $(pwd)/neo4j/plugins:/plugins \
     --env NEO4J_dbms_memory_heap_initial__size=4G \
     --env NEO4J_dbms_memory_heap_max__size=4G \
-    --env NEO4J_dbms_security_procedures_unrestricted=gds.\\\* \
+    --env NEO4J_dbms_security_procedures_unrestricted=gds.* \
     --env NEO4J_AUTH=neo4j/password \
     neo4j:4.2
 
@@ -82,6 +84,9 @@ docker exec depgraphneo4j cypher-shell -u neo4j -p password -f /var/lib/neo4j/im
 
 echo "Computing PageRank..."
 python -m critical_projects.compute_pagerank
+
+# Szymon comment: Stop here ^
+
 # And write out the reports
 python -m critical_projects.generate_pr_reports
 

@@ -1,5 +1,7 @@
 # In case you want to include other package managers than the ones selected,
-# uncomment them before starting the analysis 
+# uncomment them before starting the analysis
+
+# Szymon comment: Feel free to comment some stuff for initial tryout.
 
 INCLUDED_PLATFORMS :
   # - "Alcatraz"  # Package manager for XCode
