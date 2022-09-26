@@ -1,6 +1,6 @@
 """
 Call me like:
-python -m critical_projects.deps_to_neo4j_csv data/input/dependencies-1.6.0-2020-01-12.csv > data/processing/deps_neo4j.csv
+python -m critical_projects_old.deps_to_neo4j_csv data/input/dependencies-1.6.0-2020-01-12.csv > data/processing/deps_neo4j.csv
 
 
 The argument to this script has to be a path the the dependiencies CSV file, e.g., 
@@ -20,7 +20,7 @@ import csv
 import sys
 import time
 
-from critical_projects import INCLUDED_PLATFORMS
+from critical_projects_old import INCLUDED_PLATFORMS
 
 
 def main(fname, dest_file_name):

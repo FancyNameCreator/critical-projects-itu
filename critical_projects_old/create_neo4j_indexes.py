@@ -1,4 +1,4 @@
-from critical_projects import INCLUDED_PLATFORMS
+from critical_projects_old import INCLUDED_PLATFORMS
 
 
 if __name__ == "__main__":

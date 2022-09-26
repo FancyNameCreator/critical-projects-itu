@@ -1,7 +1,7 @@
 import os
 import csv
 from neo4j import GraphDatabase
-from critical_projects import INCLUDED_PLATFORMS, NUMBER_OF_PROJECTS
+from critical_projects_old import INCLUDED_PLATFORMS, NUMBER_OF_PROJECTS
 
 
 uri = "neo4j://localhost:7687"

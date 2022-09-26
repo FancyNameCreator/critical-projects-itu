@@ -1,11 +1,11 @@
 import os
 import csv
-from critical_projects import (
+from critical_projects_old import (
     EXPERIMENT_PLATFORMS,
     NUMBER_OF_PROJECTS,
     NUMBER_OF_TF_PROJECTS,
 )
-from critical_projects.compute_results import RESULTS_FILE
+from critical_projects_old.compute_results import RESULTS_FILE
 
 
 DATA_PATH = "data/output/"
