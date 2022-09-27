@@ -6,18 +6,18 @@ import threading
 
 
 PKG_MANAGERS_LIST = [
-    # "alire",
+    "alire",
     # "cargo",
     # "chromebrew",
-    "clojars",
+    # "clojars",
     # "conan",
     # "fpm",
     # "homebrew",
     # "luarocks",
     # "nimble",
-    "npm",
+    # "npm",
     # "ports",
-    "rubygems",
+    # "rubygems",
     # "vcpkg"
 ]
 BASE_PATH = "E:\\Studia - Szymon\\critical-projects-itu"
@@ -77,12 +77,13 @@ def add_pagerank_calculation_to_graph(graph):
 def export_nodes_to_neo4j_csv(graph, export_directory_path, edges_export_file_name):
     print(f"{threading.current_thread().name}: Exporting nodes... ")
     node_list = [(node, graph.nodes[node]["pkg_name"], graph.nodes[node]["page_rank"]) for node in graph.nodes]
-    _write_to_csv(node_list, (":ID", ":PKG_NAME", ":PAGE_RANK"), export_directory_path, edges_export_file_name)
+    _write_to_csv(node_list, (":ID", "PKG_NAME", "PAGE_RANK"), export_directory_path, edges_export_file_name)
 
 
 def export_edges_to_neo4j_csv(graph, export_directory_path, nodes_export_file_name):
     print(f"{threading.current_thread().name}: Exporting edges... ")
-    _write_to_csv(graph.edges, (":FROM_PKG", ":TO_PKG"), export_directory_path, nodes_export_file_name)
+    edge_list = [(from_id, to_id, "runtime") for from_id, to_id in graph.edges]
+    _write_to_csv(edge_list, (":START_ID", ":END_ID", ":TYPE"), export_directory_path, nodes_export_file_name)
 
 
 def generate_csvs(deps_data_path, pkg_data_path, export_directory_path, nodes_export_file_name, edges_export_file_name):
@@ -97,7 +98,7 @@ def generate_csvs(deps_data_path, pkg_data_path, export_directory_path, nodes_ex
 
 
 def main():
-    thread_pool = []
+    # thread_pool = []
 
     for pkg_manager in PKG_MANAGERS_LIST:
         print("\n=============================================")
