@@ -20,6 +20,7 @@ PKG_MANAGERS_LIST = [
     "rubygems",
     # "vcpkg"
 ]
+BASE_PATH = "E:\\Studia - Szymon\\critical-projects-itu"
 
 
 def _write_to_csv(rows, header, directory_path, file_name):
@@ -32,12 +33,15 @@ def _write_to_csv(rows, header, directory_path, file_name):
 
 
 def sanitize_input_data(dep_df, pkg_df):
+    print(f"{threading.current_thread().name}: Sanitizing input... ")
+
     sanitized_dependencies = dep_df.copy()
     sanitized_dependencies.dropna(inplace=True)
 
-    for index, row in sanitized_dependencies.iterrows():
-        if row["target_name"] not in pkg_df["name"]:
-            sanitized_dependencies.drop(index)
+    # TODO: Looks like dropping NaN has the same effect as checking if package is in package list
+    # for index, row in sanitized_dependencies.iterrows():
+    #     if row["target_name"] not in pkg_df["name"]:
+    #         sanitized_dependencies.drop(index)
 
     sanitized_dependencies.pkg_idx = sanitized_dependencies.pkg_idx.astype(int)
     sanitized_dependencies.target_idx = sanitized_dependencies.target_idx.astype(int)
@@ -56,6 +60,7 @@ def create_graph(deps_data_path, pkg_data_path):
 
     sanitized_dependency_relations = sanitize_input_data(dep_df=dependency_relations, pkg_df=package_names)
 
+    print(f"{threading.current_thread().name}: After sanitizing input... ")
     dependency_relation_graph = nx.from_pandas_edgelist(sanitized_dependency_relations, 'pkg_idx', 'target_idx')
     nx.set_node_attributes(dependency_relation_graph, pd.Series(package_names.name, index=package_names.idx).to_dict(), 'pkg_name')
 
@@ -98,23 +103,25 @@ def main():
         print("\n=============================================")
         print(f"Generating CSVs for: {pkg_manager}")
 
-        deps_data_path = f"C:\\DATA\\S T U D I A\\Master\\P3\\ASE\\critical-projects-itu\\data\\input\\{pkg_manager}\\{pkg_manager}_dependencies_05-17-2022.csv"
-        pkg_data_path = f"C:\\DATA\\S T U D I A\\Master\\P3\\ASE\\critical-projects-itu\\data\\input\\{pkg_manager}\\{pkg_manager}_packages_05-17-2022.csv"
+        deps_data_path = f"{BASE_PATH}\\data\\input\\{pkg_manager}\\{pkg_manager}_dependencies_05-17-2022.csv"
+        pkg_data_path = f"{BASE_PATH}\\data\\input\\{pkg_manager}\\{pkg_manager}_packages_05-17-2022.csv"
 
-        export_directory = f"C:\\DATA\\S T U D I A\\Master\\P3\\ASE\\critical-projects-itu\\data\\processing\\{pkg_manager}"
+        export_directory = f"{BASE_PATH}\\data\\processing\\{pkg_manager}"
         nodes_export_file_name = f"nodes_{pkg_manager}.csv"
         edges_export_file_name = f"edges_{pkg_manager}.csv"
 
-        thread = threading.Thread(
-            target=generate_csvs,
-            args=(deps_data_path, pkg_data_path, export_directory, nodes_export_file_name, edges_export_file_name),
-            name=f"Thread {pkg_manager}"
-        )
-        thread_pool.append(thread)
-        thread.start()
+        generate_csvs(deps_data_path, pkg_data_path, export_directory, nodes_export_file_name, edges_export_file_name)
 
-    for t in thread_pool:
-        t.join()
+    #     thread = threading.Thread(
+    #         target=generate_csvs,
+    #         args=(deps_data_path, pkg_data_path, export_directory, nodes_export_file_name, edges_export_file_name),
+    #         name=f"Thread {pkg_manager}"
+    #     )
+    #     thread_pool.append(thread)
+    #     thread.start()
+    #
+    # for t in thread_pool:
+    #     t.join()
 
 
 if __name__ == '__main__':
