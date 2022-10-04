@@ -3,10 +3,11 @@ import networkx as nx
 import pandas as pd
 import os
 import threading
+import time
 
 
 PKG_MANAGERS_LIST = [
-    "alire",
+    # "alire",
     # "cargo",
     # "chromebrew",
     # "clojars",
@@ -15,12 +16,104 @@ PKG_MANAGERS_LIST = [
     # "homebrew",
     # "luarocks",
     # "nimble",
-    # "npm",
+    "npm",
     # "ports",
     # "rubygems",
     # "vcpkg"
 ]
-BASE_PATH = "E:\\Studia - Szymon\\critical-projects-itu"
+
+# BASE_PATH = "E:\\Studia - Szymon\\critical-projects-itu"
+BASE_PATH = "C:\\DATA\\S T U D I A\\Master\\P3\\ASE\\critical-projects-itu"
+
+
+def generate_csvs(pkg_manager, deps_data_path, pkg_data_path, export_directory_path, nodes_export_file_name, edges_export_file_name):
+    if not os.path.exists(export_directory_path):
+        os.makedirs(export_directory_path)
+
+    graph = create_graph(deps_data_path, pkg_data_path)
+    graph_with_pageranks = add_pagerank_calculation_to_graph(graph)
+
+    export_nodes_to_neo4j_csv(graph_with_pageranks, pkg_manager, export_directory_path, nodes_export_file_name)
+    export_edges_to_neo4j_csv(graph_with_pageranks, pkg_manager, export_directory_path, edges_export_file_name)
+
+
+def create_graph(deps_data_path, pkg_data_path):
+    dependency_relations, package_names = load_and_preprocess_data(deps_data_path, pkg_data_path)
+
+    print(f"{threading.current_thread().name}: Creating graph... ")
+    dependency_relation_graph = nx.from_pandas_edgelist(dependency_relations, 'pkg_idx', 'target_idx', edge_attr=['kind'])
+
+    nx.set_node_attributes(dependency_relation_graph, pd.Series(package_names.name, index=package_names.idx).to_dict(), 'pkg_name')
+    nx.set_node_attributes(dependency_relation_graph, pd.Series(package_names.pkgman, index=package_names.idx).to_dict(), 'pkg_manager')
+
+    return dependency_relation_graph
+
+
+def load_and_preprocess_data(deps_data_path, pkg_data_path):
+    print(f"{threading.current_thread().name}: Loading data... ")
+    dep_df = pd.read_csv(
+        filepath_or_buffer=deps_data_path,
+        usecols=["pkg_idx", "target_idx", "target_name", "kind"],
+    )
+    pkg_df = pd.read_csv(
+        filepath_or_buffer=pkg_data_path,
+        usecols=["idx", "name", "pkgman"],
+    )
+
+    return preprocess_dependency_relations(dep_df), preprocess_packages(pkg_df)
+
+
+def preprocess_dependency_relations(dep_df):
+    print(f"{threading.current_thread().name}: Preprocessing dependency relations... ")
+
+    dep_df['kind'].fillna("unknown", inplace=True)
+    dep_df.dropna(inplace=True)
+
+    dep_df.target_name = dep_df.target_name.astype('category')
+    dep_df.kind = dep_df.kind.astype('category')
+    dep_df.pkg_idx = dep_df.pkg_idx.astype(int)
+    dep_df.target_idx = dep_df.target_idx.astype(int)
+
+    return dep_df
+
+
+def preprocess_packages(pkg_df):
+    print(f"{threading.current_thread().name}: Preprocessing packages... ")
+
+    pkg_df.name = pkg_df.name.astype('category')
+    pkg_df.pkgman = pkg_df.pkgman.astype('category')
+    pkg_df.idx = pkg_df.idx.astype(int)
+
+    return pkg_df
+
+
+def add_pagerank_calculation_to_graph(graph):
+    print(f"{threading.current_thread().name}: Computing pagerank... ")
+    nx.set_node_attributes(graph, nx.pagerank(graph), 'page_rank')
+
+    return graph
+
+
+def export_nodes_to_neo4j_csv(graph, pkg_manager, export_directory_path, edges_export_file_name):
+    print(f"{threading.current_thread().name}: Exporting nodes... ")
+    node_list = [
+        (f"{pkg_manager}{str(node)}", graph.nodes[node]["pkg_name"], graph.nodes[node]["page_rank"], graph.nodes[node]["pkg_manager"])
+        for node in graph.nodes
+    ]
+
+    _write_to_csv(node_list, (":ID", "PKG_NAME", "PAGE_RANK", ":LABEL"), export_directory_path, edges_export_file_name)
+
+
+def export_edges_to_neo4j_csv(graph, pkg_manager, export_directory_path, nodes_export_file_name):
+    print(f"{threading.current_thread().name}: Exporting edges... ")
+
+    attributes = nx.get_edge_attributes(graph, 'kind')
+    edge_list = [
+        (f"{pkg_manager}{str(from_id)}", f"{pkg_manager}{str(to_id)}", attributes[from_id, to_id])
+        for from_id, to_id in graph.edges
+    ]
+
+    _write_to_csv(edge_list, (":START_ID", ":END_ID", ":TYPE"), export_directory_path, nodes_export_file_name)
 
 
 def _write_to_csv(rows, header, directory_path, file_name):
@@ -32,77 +125,10 @@ def _write_to_csv(rows, header, directory_path, file_name):
             writer.writerow(row)
 
 
-def sanitize_input_data(dep_df, pkg_df):
-    print(f"{threading.current_thread().name}: Sanitizing input... ")
-
-    sanitized_dependencies = dep_df.copy()
-    sanitized_dependencies.dropna(inplace=True)
-
-    # TODO: Looks like dropping NaN has the same effect as checking if package is in package list
-    # for index, row in sanitized_dependencies.iterrows():
-    #     if row["target_name"] not in pkg_df["name"]:
-    #         sanitized_dependencies.drop(index)
-
-    sanitized_dependencies.pkg_idx = sanitized_dependencies.pkg_idx.astype(int)
-    sanitized_dependencies.target_idx = sanitized_dependencies.target_idx.astype(int)
-
-    return sanitized_dependencies
-
-
-def create_graph(deps_data_path, pkg_data_path):
-    print(f"{threading.current_thread().name}: Creating graph... ")
-
-    dep_df = pd.read_csv(deps_data_path)
-    dependency_relations = dep_df[["pkg_idx", "target_idx", "target_name"]]
-
-    pkg_df = pd.read_csv(pkg_data_path)
-    package_names = pkg_df[["idx", "name"]]
-
-    sanitized_dependency_relations = sanitize_input_data(dep_df=dependency_relations, pkg_df=package_names)
-
-    print(f"{threading.current_thread().name}: After sanitizing input... ")
-    dependency_relation_graph = nx.from_pandas_edgelist(sanitized_dependency_relations, 'pkg_idx', 'target_idx')
-    nx.set_node_attributes(dependency_relation_graph, pd.Series(package_names.name, index=package_names.idx).to_dict(), 'pkg_name')
-
-    return dependency_relation_graph
-
-
-def add_pagerank_calculation_to_graph(graph):
-    print(f"{threading.current_thread().name}: Computing pagerank... ")
-    nx.set_node_attributes(graph, nx.pagerank(graph), 'page_rank')
-
-    return graph
-
-
-def export_nodes_to_neo4j_csv(graph, export_directory_path, edges_export_file_name):
-    print(f"{threading.current_thread().name}: Exporting nodes... ")
-    node_list = [(node, graph.nodes[node]["pkg_name"], graph.nodes[node]["page_rank"]) for node in graph.nodes]
-    _write_to_csv(node_list, (":ID", "PKG_NAME", "PAGE_RANK"), export_directory_path, edges_export_file_name)
-
-
-def export_edges_to_neo4j_csv(graph, export_directory_path, nodes_export_file_name):
-    print(f"{threading.current_thread().name}: Exporting edges... ")
-    edge_list = [(from_id, to_id, "runtime") for from_id, to_id in graph.edges]
-    _write_to_csv(edge_list, (":START_ID", ":END_ID", ":TYPE"), export_directory_path, nodes_export_file_name)
-
-
-def generate_csvs(deps_data_path, pkg_data_path, export_directory_path, nodes_export_file_name, edges_export_file_name):
-    if not os.path.exists(export_directory_path):
-        os.makedirs(export_directory_path)
-
-    graph = create_graph(deps_data_path, pkg_data_path)
-    graph_with_pageranks = add_pagerank_calculation_to_graph(graph)
-
-    export_nodes_to_neo4j_csv(graph_with_pageranks, export_directory_path, nodes_export_file_name)
-    export_edges_to_neo4j_csv(graph_with_pageranks, export_directory_path, edges_export_file_name)
-
-
 def main():
-    # thread_pool = []
-
     for pkg_manager in PKG_MANAGERS_LIST:
         print("\n=============================================")
-        print(f"Generating CSVs for: {pkg_manager}")
+        print(f"{threading.current_thread().name}: Generating CSVs for: {pkg_manager}")
 
         deps_data_path = f"{BASE_PATH}\\data\\input\\{pkg_manager}\\{pkg_manager}_dependencies_05-17-2022.csv"
         pkg_data_path = f"{BASE_PATH}\\data\\input\\{pkg_manager}\\{pkg_manager}_packages_05-17-2022.csv"
@@ -111,18 +137,16 @@ def main():
         nodes_export_file_name = f"nodes_{pkg_manager}.csv"
         edges_export_file_name = f"edges_{pkg_manager}.csv"
 
-        generate_csvs(deps_data_path, pkg_data_path, export_directory, nodes_export_file_name, edges_export_file_name)
-
-    #     thread = threading.Thread(
-    #         target=generate_csvs,
-    #         args=(deps_data_path, pkg_data_path, export_directory, nodes_export_file_name, edges_export_file_name),
-    #         name=f"Thread {pkg_manager}"
-    #     )
-    #     thread_pool.append(thread)
-    #     thread.start()
-    #
-    # for t in thread_pool:
-    #     t.join()
+        generation_start_time = time.time()
+        generate_csvs(
+            pkg_manager,
+            deps_data_path,
+            pkg_data_path,
+            export_directory,
+            nodes_export_file_name,
+            edges_export_file_name
+        )
+        print(f"Generation took {round(time.time() - generation_start_time, 4)} seconds.")
 
 
 if __name__ == '__main__':
