@@ -109,7 +109,7 @@ def export_edges_to_neo4j_csv(graph, pkg_manager, export_directory_path, nodes_e
 
     attributes = nx.get_edge_attributes(graph, 'kind')
     edge_list = [
-        (f"{pkg_manager}{str(from_id)}", f"{pkg_manager}{str(to_id)}", attributes[from_id, to_id])
+        (f"{pkg_manager}{str(from_id)}", f"{pkg_manager}{str(to_id)}", str(attributes[from_id, to_id]).lower())
         for from_id, to_id in graph.edges
     ]
 
@@ -126,6 +126,9 @@ def _write_to_csv(rows, header, directory_path, file_name):
 
 
 def main():
+    # TODO: Investigate NaNs in the labels in some exports
+    # TODO: Make package managers lower case words
+
     for pkg_manager in PKG_MANAGERS_LIST:
         print("\n=============================================")
         print(f"{threading.current_thread().name}: Generating CSVs for: {pkg_manager}")
