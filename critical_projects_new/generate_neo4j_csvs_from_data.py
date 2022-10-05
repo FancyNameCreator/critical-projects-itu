@@ -1,3 +1,4 @@
+import argparse
 import csv
 import networkx as nx
 import pandas as pd
@@ -7,7 +8,7 @@ import time
 
 
 PKG_MANAGERS_LIST = [
-    # "alire",
+    "alire",
     # "cargo",
     # "chromebrew",
     # "clojars",
@@ -16,14 +17,11 @@ PKG_MANAGERS_LIST = [
     # "homebrew",
     # "luarocks",
     # "nimble",
-    "npm",
+    # "npm",
     # "ports",
     # "rubygems",
     # "vcpkg"
 ]
-
-# BASE_PATH = "E:\\Studia - Szymon\\critical-projects-itu"
-BASE_PATH = "C:\\DATA\\S T U D I A\\Master\\P3\\ASE\\critical-projects-itu"
 
 
 def generate_csvs(pkg_manager, deps_data_path, pkg_data_path, export_directory_path, nodes_export_file_name, edges_export_file_name):
@@ -117,7 +115,7 @@ def export_edges_to_neo4j_csv(graph, pkg_manager, export_directory_path, nodes_e
 
 
 def _write_to_csv(rows, header, directory_path, file_name):
-    with open(f"{directory_path}\\{file_name}", 'w+', encoding="utf-8") as file:
+    with open(os.path.join(directory_path, file_name), 'w+', encoding="utf-8") as file:
         writer = csv.writer(file)
 
         writer.writerow(header)
@@ -129,14 +127,30 @@ def main():
     # TODO: Investigate NaNs in the labels in some exports
     # TODO: Make package managers lower case words
 
+    parser = argparse.ArgumentParser(
+        description='Parses the DaSEA dataset CSVs to CSVs supported by OSSF tool.')
+    parser.add_argument(
+        "--input_directory",
+        type=str,
+        help="Path to input directory containing folders with CSV files.")
+    parser.add_argument(
+        "--output_directory",
+        type=str,
+        help="Output directory for CSVs")
+
+    args = parser.parse_args()
+
+    if args.output_directory is None or args.input_directory is None:
+        parser.error("Arguments must be specified!")
+
     for pkg_manager in PKG_MANAGERS_LIST:
         print("\n=============================================")
         print(f"{threading.current_thread().name}: Generating CSVs for: {pkg_manager}")
 
-        deps_data_path = f"{BASE_PATH}\\data\\input\\{pkg_manager}\\{pkg_manager}_dependencies_05-17-2022.csv"
-        pkg_data_path = f"{BASE_PATH}\\data\\input\\{pkg_manager}\\{pkg_manager}_packages_05-17-2022.csv"
+        deps_data_path = os.path.join(args.input_directory, pkg_manager, f"{pkg_manager}_dependencies_05-17-2022.csv")
+        pkg_data_path = os.path.join(args.input_directory, pkg_manager, f"{pkg_manager}_packages_05-17-2022.csv")
 
-        export_directory = f"{BASE_PATH}\\data\\processing\\{pkg_manager}"
+        export_directory = os.path.join(args.output_directory, pkg_manager)
         nodes_export_file_name = f"nodes_{pkg_manager}.csv"
         edges_export_file_name = f"edges_{pkg_manager}.csv"
 
