@@ -95,7 +95,7 @@ def add_pagerank_calculation_to_graph(graph):
 def export_nodes_to_neo4j_csv(graph, pkg_manager, export_directory_path, edges_export_file_name):
     print(f"{threading.current_thread().name}: Exporting nodes... ")
     node_list = [
-        (f"{pkg_manager}{str(node)}", graph.nodes[node]["pkg_name"], graph.nodes[node]["page_rank"], graph.nodes[node]["pkg_manager"])
+        (f"{pkg_manager}{str(node)}", graph.nodes[node]["pkg_name"], graph.nodes[node]["page_rank"], graph.nodes[node]["pkg_manager"].lower())
         for node in graph.nodes
     ]
 
@@ -125,7 +125,6 @@ def _write_to_csv(rows, header, directory_path, file_name):
 
 def main():
     # TODO: Investigate NaNs in the labels in some exports
-    # TODO: Make package managers lower case words
 
     parser = argparse.ArgumentParser(
         description='Parses the DaSEA dataset CSVs to CSVs supported by OSSF tool.')
