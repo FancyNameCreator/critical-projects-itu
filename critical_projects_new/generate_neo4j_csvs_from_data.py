@@ -8,7 +8,7 @@ import time
 
 
 PKG_MANAGERS_LIST = [
-    "alire",
+    # "alire",
     # "cargo",
     # "chromebrew",
     # "clojars",
@@ -17,7 +17,7 @@ PKG_MANAGERS_LIST = [
     # "homebrew",
     # "luarocks",
     # "nimble",
-    # "npm",
+    "npm",
     # "ports",
     # "rubygems",
     # "vcpkg"
@@ -37,12 +37,23 @@ def generate_csvs(pkg_manager, deps_data_path, pkg_data_path, export_directory_p
 
 def create_graph(deps_data_path, pkg_data_path):
     dependency_relations, package_names = load_and_preprocess_data(deps_data_path, pkg_data_path)
+    dependency_relation_graph = nx.DiGraph()
 
-    print(f"{threading.current_thread().name}: Creating graph... ")
-    dependency_relation_graph = nx.from_pandas_edgelist(dependency_relations, 'pkg_idx', 'target_idx', edge_attr=['kind'])
+    print(f"{threading.current_thread().name}: Creating graph: adding packages... ")
+    number_of_packages = len(package_names.index)
+    for index, package in package_names.iterrows():
+        if index % 50000 == 0:
+            print(f"{round(index/number_of_packages * 100, 2)}% of adding packages done.")
+        dependency_relation_graph.add_node(package["idx"], pkg_name=package["name"], pkg_manager=package["pkgman"])
+    print(f"100% of adding packages done.")
 
-    nx.set_node_attributes(dependency_relation_graph, pd.Series(package_names.name, index=package_names.idx).to_dict(), 'pkg_name')
-    nx.set_node_attributes(dependency_relation_graph, pd.Series(package_names.pkgman, index=package_names.idx).to_dict(), 'pkg_manager')
+    print(f"{threading.current_thread().name}: Creating graph: adding dependency relations... ")
+    number_of_dependencies = len(dependency_relations.index)
+    for index, dependency in dependency_relations.iterrows():
+        if index % 150000 == 0:
+            print(f"{round(index/number_of_dependencies * 100, 2)}% of adding dependencies done.")
+        dependency_relation_graph.add_edge(dependency["pkg_idx"], dependency["target_idx"], kind=dependency["kind"])
+    print(f"100% of adding dependencies done.")
 
     return dependency_relation_graph
 
@@ -51,7 +62,7 @@ def load_and_preprocess_data(deps_data_path, pkg_data_path):
     print(f"{threading.current_thread().name}: Loading data... ")
     dep_df = pd.read_csv(
         filepath_or_buffer=deps_data_path,
-        usecols=["pkg_idx", "target_idx", "target_name", "kind"],
+        usecols=["pkg_idx", "target_idx", "kind"],
     )
     pkg_df = pd.read_csv(
         filepath_or_buffer=pkg_data_path,
@@ -67,7 +78,6 @@ def preprocess_dependency_relations(dep_df):
     dep_df['kind'].fillna("unknown", inplace=True)
     dep_df.dropna(inplace=True)
 
-    dep_df.target_name = dep_df.target_name.astype('category')
     dep_df.kind = dep_df.kind.astype('category')
     dep_df.pkg_idx = dep_df.pkg_idx.astype(int)
     dep_df.target_idx = dep_df.target_idx.astype(int)
@@ -125,6 +135,7 @@ def _write_to_csv(rows, header, directory_path, file_name):
 
 def main():
     # TODO: Investigate NaNs in the labels in some exports
+    # TODO: Ignores packages without dependencies!
 
     parser = argparse.ArgumentParser(
         description='Parses the DaSEA dataset CSVs to CSVs supported by OSSF tool.')
