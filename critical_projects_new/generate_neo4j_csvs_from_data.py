@@ -40,20 +40,25 @@ def create_graph(deps_data_path, pkg_data_path):
     dependency_relation_graph = nx.DiGraph()
 
     print(f"{threading.current_thread().name}: Creating graph: adding packages... ")
-    number_of_packages = len(package_names.index)
-    for index, package in package_names.iterrows():
-        if index % 50000 == 0:
-            print(f"{round(index/number_of_packages * 100, 2)}% of adding packages done.")
-        dependency_relation_graph.add_node(package["idx"], pkg_name=package["name"], pkg_manager=package["pkgman"])
-    print(f"100% of adding packages done.")
+    dependency_relation_graph.add_nodes_from(package_names.idx.to_dict(), pkg_name=package_names.name.to_dict(), pkg_manager=package_names.pkgman.to_dict())
+
+    # print(f"{threading.current_thread().name}: Creating graph: adding packages... ")
+    # number_of_packages = len(package_names.index)
+    # for index, package in package_names.iterrows():
+    #     if index % 50000 == 0:
+    #         print(f"{round(index/number_of_packages * 100, 2)}% of adding packages done.")
+    #     dependency_relation_graph.add_node(package["idx"], pkg_name=package["name"], pkg_manager=package["pkgman"])
+    # print(f"100% of adding packages done.")
 
     print(f"{threading.current_thread().name}: Creating graph: adding dependency relations... ")
-    number_of_dependencies = len(dependency_relations.index)
-    for index, dependency in dependency_relations.iterrows():
-        if index % 150000 == 0:
-            print(f"{round(index/number_of_dependencies * 100, 2)}% of adding dependencies done.")
-        dependency_relation_graph.add_edge(dependency["pkg_idx"], dependency["target_idx"], kind=dependency["kind"])
-    print(f"100% of adding dependencies done.")
+    dependency_relation_graph.add_edges_from(list(zip(dependency_relations.pkg_idx, dependency_relations.target_idx)), kind=dependency_relations.kind.to_dict())
+
+    # number_of_dependencies = len(dependency_relations.index)
+    # for index, dependency in dependency_relations.iterrows():
+    #     if index % 150000 == 0:
+    #         print(f"{round(index/number_of_dependencies * 100, 2)}% of adding dependencies done.")
+    #     dependency_relation_graph.add_edge(dependency["pkg_idx"], dependency["target_idx"], kind=dependency["kind"])
+    # print(f"100% of adding dependencies done.")
 
     return dependency_relation_graph
 
