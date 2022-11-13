@@ -44,7 +44,7 @@ In this project, I compute the PageRanks for all packages from 15 package manage
 
 # Results
 
-The results of computation of PageRanks and truck factors -incorporating the results of computing criticality with the current _criticality_score_- can be found in [./data/output/comparison.adoc](./data/output/comparison.adoc)). The top 1000 ranked projects per package manager can be found under [./data/output/](./data/output/)), where the file names are `<pkg_manager>_top_1000.csv`.
+The results of computation of PageRanks and truck factors -incorporating the results of computing criticality with the current _criticality_score_- can be found in [./data/output/comparison.adoc](data/output/old/comparison.adoc)). The top 1000 ranked projects per package manager can be found under [./data/output/](./data/output/)), where the file names are `<pkg_manager>_top_1000.csv`.
 
 In the following some examples from the results:
 <!-- 
@@ -89,7 +89,7 @@ Note, likely one of the reasons, why the top 200 result lists of the current `cr
 
 This is a proof of concept, which relies on that the dependency information in the original dataset from libraries.io is correct. For example, the libraries.io dataset contains a multiple thousands of Go, Hackage, Julia, Nimble, etc. projects but no dependency information for these. That is, the code in this repository cannot compute a pagerank for these package managers. Supporting the people over there, for example with getting dependency information from other platforms, such as, Nix or other Linuxes - as [discussed on HackerNews](https://news.ycombinator.com/item?id=25381397)- would improve feasibility of running an experiment like that in a large scale scenario. (Also, it is not entirely clear how the libraries.io people precisely generate the dependency information.)
 
-My computation of the truck factor might be a bit too pessimistic. That is, there might be more people actively maintaining a project compared to the computed score. On [truckfactor](https://github.com/HelgeCPH/truckfactor), I try to briefly describe how it is computed. There exist various truck factor algorithms, so one may replace mine with another one. Furthermore, computation of truck factors for repositories with multiple tens of thousands of commits is currently slow. That is the reason, why in [the results](./data/output/comparison.csv) there are currently only the top 20 projects of five package managers.
+My computation of the truck factor might be a bit too pessimistic. That is, there might be more people actively maintaining a project compared to the computed score. On [truckfactor](https://github.com/HelgeCPH/truckfactor), I try to briefly describe how it is computed. There exist various truck factor algorithms, so one may replace mine with another one. Furthermore, computation of truck factors for repositories with multiple tens of thousands of commits is currently slow. That is the reason, why in [the results](data/output/old/comparison.csv) there are currently only the top 20 projects of five package managers.
 
 
 # Recreating the Experiment
