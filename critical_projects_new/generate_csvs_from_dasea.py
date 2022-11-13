@@ -136,9 +136,6 @@ def _write_to_csv(rows, header, directory_path, file_name):
 
 
 def main():
-    # TODO: Investigate NaNs in the labels in some exports
-    # TODO: Ignores packages without dependencies!
-
     parser = argparse.ArgumentParser(
         description='Parses the DaSEA dataset CSVs to CSVs supported by OSSF tool.')
     parser.add_argument(
