@@ -8,19 +8,19 @@ import time
 
 
 PKG_MANAGERS_LIST = [
-    # "alire",
+    "alire",
     # "cargo",          # something is off with this package manager, do not include it
-    # "chromebrew",
-    # "clojars",
-    # "conan",
-    # "fpm",
-    # "homebrew",
-    # "luarocks",
-    # "nimble",
+    "chromebrew",
+    "clojars",
+    "conan",
+    "fpm",
+    "homebrew",
+    "luarocks",
+    "nimble",
     "npm",              # speak with helge about it
     # "ports",
-    # "rubygems",
-    # "vcpkg"
+    "rubygems",
+    "vcpkg"
 ]
 
 

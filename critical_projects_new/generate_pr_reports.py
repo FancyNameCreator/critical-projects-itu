@@ -1,59 +1,61 @@
-# import os
-# import csv
-# from neo4j import GraphDatabase
-#
-# PKG_MANAGERS_LIST = [
-#     "alire",
-#     # "cargo",
-#     # "chromebrew",
-#     # "clojars",
-#     # "conan",
-#     # "fpm",
-#     # "homebrew",
-#     # "luarocks",
-#     # "nimble",
-#     # "npm",
-#     # "ports",
-#     # "rubygems",
-#     # "vcpkg"
-# ]
-# NUMBER_OF_PROJECTS = 100
-#
-# uri = "neo4j://localhost:7687"
-# driver = GraphDatabase.driver(uri, auth=("neo4j", "password"))
-#
-#
-# def report(tx, pkg_manager, limit):
-#     query = f"""MATCH (n:{pkg_manager})
-#     RETURN ID(n), n.PKG_NAME, n.PAGE_RANK
-#     ORDER BY n.PAGE_RANK DESC
-#     LIMIT {limit};"""
-#     result = tx.run(query)
-#
-#     return [
-#         (r["ID(n)"], r["n.PKG_NAME"], r["n.PAGE_RANK"])
-#         for r in result
-#     ]
-#
-#
-# def main():
-#     base_path = "C:\\DATA\\S T U D I A\\Master\\P3\\ASE\\critical-projects-itu\\data\\output"
-#
-#     with driver.session() as session:
-#         for pkg_manager in PKG_MANAGERS_LIST:
-#             result_str = session.read_transaction(report, pkg_manager, NUMBER_OF_PROJECTS)
-#
-#             fname = f"{pkg_manager.lower()}_top_{NUMBER_OF_PROJECTS}.csv"
-#             outfile = os.path.join(base_path, fname)
-#
-#             with open(outfile, "w") as fp:
-#                 csv_writer = csv.writer(fp)
-#                 csv_writer.writerow(("id", "name", "pagerank"))
-#                 for r in result_str:
-#                     csv_writer.writerow(r)
-#
-#     driver.close()
-#
-#
-# if __name__ == "__main__":
-#     main()
+import argparse
+import os
+import time
+import pandas as pd
+
+
+PKG_MANAGERS_LIST = [
+    "alire",
+    # "cargo",
+    "chromebrew",
+    "clojars",
+    "conan",
+    "fpm",
+    "homebrew",
+    "luarocks",
+    "nimble",
+    "npm",
+    # "ports",
+    "rubygems",
+    "vcpkg"
+]
+NUMBER_OF_PROJECTS = 1000
+
+
+def generate_pr_report(source_file_path, output_file_path, include_n_rows=NUMBER_OF_PROJECTS):
+    df = pd.read_csv(source_file_path)
+    sorted_df = df.sort_values(by=["PAGE_RANK"], ascending=False).head(include_n_rows)
+    sorted_df.to_csv(output_file_path)
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description='Parses the DaSEA dataset CSVs to CSVs supported by OSSF tool.')
+    parser.add_argument(
+        "--input_directory",
+        type=str,
+        help="Path to input directory containing folders with CSV files.")
+    parser.add_argument(
+        "--output_directory",
+        type=str,
+        help="Output directory for CSVs")
+
+    args = parser.parse_args()
+
+    if args.output_directory is None or args.input_directory is None:
+        parser.error("Arguments must be specified!")
+
+    for pkg_manager in PKG_MANAGERS_LIST:
+        print("\n=============================================")
+        print(f"Generating reports for: {pkg_manager}")
+
+        path_to_source_file = os.path.join(args.input_directory, pkg_manager, f"nodes_{pkg_manager}.csv")
+        path_to_dest_file = os.path.join(args.output_directory, f"{pkg_manager}_top_{NUMBER_OF_PROJECTS}.csv")
+
+        generation_start_time = time.time()
+        generate_pr_report(path_to_source_file, path_to_dest_file)
+        print(f"Generation took {round(time.time() - generation_start_time, 4)} seconds.")
+
+
+if __name__ == '__main__':
+    main()
