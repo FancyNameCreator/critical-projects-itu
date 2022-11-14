@@ -8,19 +8,19 @@ import time
 
 
 PKG_MANAGERS_LIST = [
-    "alire",
-    "cargo",          # something is off with this package manager, do not include it
-    "chromebrew",
-    "clojars",
-    "conan",
-    "fpm",
-    "homebrew",
-    "luarocks",
-    "nimble",
-    # "npm",              # speak with helge about it
-    # "ports",
-    "rubygems",
-    "vcpkg"
+    # "Alcatraz",
+    "Cargo",
+    "CPAN",
+    "CRAN",
+    "Dub",
+    "Hex",
+    "Homebrew",
+    "Maven",
+    # "NPM",
+    "NuGet",
+    "Packagist",
+    "Pypi",
+    "Rubygems"
 ]
 
 
@@ -31,8 +31,8 @@ def generate_csvs(pkg_manager, deps_data_path, pkg_data_path, export_directory_p
     graph = create_graph(deps_data_path, pkg_data_path)
     graph_with_pageranks = add_pagerank_calculation_to_graph(graph)
 
-    export_nodes_to_neo4j_csv(graph_with_pageranks, pkg_manager, export_directory_path, nodes_export_file_name)
-    export_edges_to_neo4j_csv(graph_with_pageranks, pkg_manager, export_directory_path, edges_export_file_name)
+    export_nodes_to_csv(graph_with_pageranks, pkg_manager, export_directory_path, nodes_export_file_name)
+    export_edges_to_csv(graph_with_pageranks, pkg_manager, export_directory_path, edges_export_file_name)
 
 
 def create_graph(deps_data_path, pkg_data_path):
@@ -56,25 +56,28 @@ def create_graph(deps_data_path, pkg_data_path):
 
 def load_and_preprocess_data(deps_data_path, pkg_data_path):
     print(f"{threading.current_thread().name}: Loading data... ")
-    dep_df = pd.read_csv(
-        filepath_or_buffer=deps_data_path,
-        usecols=["pkg_idx", "target_idx"],
-    )
+
     pkg_df = pd.read_csv(
         filepath_or_buffer=pkg_data_path,
         usecols=["idx", "name", "pkgman"],
     )
+    dep_df = pd.read_csv(
+        filepath_or_buffer=deps_data_path,
+        usecols=["pkg_idx", "target_idx"],
+    )
 
-    return preprocess_dependency_relations(dep_df), preprocess_packages(pkg_df)
+    return preprocess_dependency_relations(dep_df, pkg_df), preprocess_packages(pkg_df)
 
 
-def preprocess_dependency_relations(dep_df):
+def preprocess_dependency_relations(dep_df, pkg_df):
     print(f"{threading.current_thread().name}: Preprocessing dependency relations... ")
 
     dep_df.dropna(inplace=True)
     dep_df.pkg_idx = dep_df.pkg_idx.astype(int)
     dep_df.target_idx = dep_df.target_idx.astype(int)
 
+    is_in_packages = dep_df.isin(pkg_df["idx"].values)
+    dep_df = dep_df[is_in_packages["pkg_idx"] & is_in_packages["target_idx"]]
     return dep_df
 
 
@@ -108,7 +111,7 @@ def _normalize_pagerank(item, ecosystem_size):
     return key, probabilistic_normalized_value
 
 
-def export_nodes_to_neo4j_csv(graph, pkg_manager, export_directory_path, edges_export_file_name):
+def export_nodes_to_csv(graph, pkg_manager, export_directory_path, edges_export_file_name):
     print(f"{threading.current_thread().name}: Exporting nodes... ")
 
     node_list = [
@@ -119,7 +122,7 @@ def export_nodes_to_neo4j_csv(graph, pkg_manager, export_directory_path, edges_e
     _write_to_csv(node_list, (":ID", "PKG_NAME", "PAGE_RANK", ":LABEL"), export_directory_path, edges_export_file_name)
 
 
-def export_edges_to_neo4j_csv(graph, pkg_manager, export_directory_path, nodes_export_file_name):
+def export_edges_to_csv(graph, pkg_manager, export_directory_path, nodes_export_file_name):
     print(f"{threading.current_thread().name}: Exporting edges... ")
 
     edge_list = [
@@ -141,7 +144,7 @@ def _write_to_csv(rows, header, directory_path, file_name):
 
 def main():
     parser = argparse.ArgumentParser(
-        description='Parses the DaSEA dataset CSVs to CSVs supported by OSSF tool.')
+        description='Parses the libraries.io dataset CSVs to CSVs supported by OSSF tool.')
     parser.add_argument(
         "--input_directory",
         type=str,
@@ -159,13 +162,14 @@ def main():
     for pkg_manager in PKG_MANAGERS_LIST:
         print("\n=============================================")
         print(f"{threading.current_thread().name}: Generating CSVs for: {pkg_manager}")
+        l_pkg_manager = pkg_manager.lower()
 
-        deps_data_path = os.path.join(args.input_directory, pkg_manager, f"{pkg_manager}_dependencies_05-17-2022.csv")
-        pkg_data_path = os.path.join(args.input_directory, pkg_manager, f"{pkg_manager}_packages_05-17-2022.csv")
+        deps_data_path = os.path.join(args.input_directory, l_pkg_manager, f"dependencies.csv")
+        pkg_data_path = os.path.join(args.input_directory, l_pkg_manager, f"projects.csv")
 
-        export_directory = os.path.join(args.output_directory, pkg_manager)
-        nodes_export_file_name = f"nodes_{pkg_manager}.csv"
-        edges_export_file_name = f"edges_{pkg_manager}.csv"
+        export_directory = os.path.join(args.output_directory, l_pkg_manager)
+        nodes_export_file_name = f"lib_nodes_{l_pkg_manager}.csv"
+        edges_export_file_name = f"lib_edges_{l_pkg_manager}.csv"
 
         generation_start_time = time.time()
         generate_csvs(
