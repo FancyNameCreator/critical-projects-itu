@@ -23,6 +23,14 @@ PKG_MANAGERS_LIST = [
 
 def convert_repository(repo: str):
     if repo.__contains__("github") or repo.__contains__("gitlab"):
+        if repo.startswith("git+"):
+            repo = repo.lstrip("git+")
+        if repo.endswith(".git"):
+            repo = repo.rstrip(".git")
+        if repo.__contains__("/archive/"):
+            repo = repo.split("/archive/")[0]
+        if repo.__contains__("/releases/"):
+            repo = repo.split("/releases/")[0]
         return repo
     else:
         return None
