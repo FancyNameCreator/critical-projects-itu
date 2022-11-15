@@ -17,7 +17,7 @@ PKG_MANAGERS_LIST = [
     "homebrew",
     "luarocks",
     "nimble",
-    # "npm",              # speak with helge about it
+    "npm",              # speak with helge about it
     # "ports",
     "rubygems",
     "vcpkg"
@@ -163,7 +163,7 @@ def main():
         deps_data_path = os.path.join(args.input_directory, pkg_manager, f"{pkg_manager}_dependencies_05-17-2022.csv")
         pkg_data_path = os.path.join(args.input_directory, pkg_manager, f"{pkg_manager}_packages_05-17-2022.csv")
 
-        export_directory = os.path.join(args.output_directory, pkg_manager)
+        export_directory = os.path.join(args.output_directory, "dasea", pkg_manager)
         nodes_export_file_name = f"nodes_{pkg_manager}.csv"
         edges_export_file_name = f"edges_{pkg_manager}.csv"
 

@@ -6,7 +6,7 @@ import pandas as pd
 
 PKG_MANAGERS_LIST = [
     "alire",
-    # "cargo",
+    "cargo",
     "chromebrew",
     "clojars",
     "conan",
@@ -62,7 +62,7 @@ def main():
         print(f"Generating CSVs for: {pkg_manager}")
 
         path_to_source_file = os.path.join(args.input_directory, pkg_manager, f"{pkg_manager}_versions_05-17-2022.csv")
-        path_to_dest_file = os.path.join(args.output_directory, pkg_manager, f"projects_and_repos.csv")
+        path_to_dest_file = os.path.join(args.output_directory, "projects_and_repos", f"{pkg_manager}_projects_and_repos.csv")
 
         generation_start_time = time.time()
         generate_project_repos(path_to_source_file, path_to_dest_file, pkg_manager)

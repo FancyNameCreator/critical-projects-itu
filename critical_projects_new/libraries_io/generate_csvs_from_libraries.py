@@ -167,7 +167,7 @@ def main():
         deps_data_path = os.path.join(args.input_directory, l_pkg_manager, f"dependencies.csv")
         pkg_data_path = os.path.join(args.input_directory, l_pkg_manager, f"projects.csv")
 
-        export_directory = os.path.join(args.output_directory, l_pkg_manager)
+        export_directory = os.path.join(args.output_directory, "libraries_io", l_pkg_manager)
         nodes_export_file_name = f"lib_nodes_{l_pkg_manager}.csv"
         edges_export_file_name = f"lib_edges_{l_pkg_manager}.csv"
 

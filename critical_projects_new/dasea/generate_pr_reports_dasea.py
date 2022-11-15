@@ -6,7 +6,7 @@ import pandas as pd
 
 PKG_MANAGERS_LIST = [
     "alire",
-    # "cargo",
+    "cargo",
     "chromebrew",
     "clojars",
     "conan",
@@ -19,7 +19,7 @@ PKG_MANAGERS_LIST = [
     "rubygems",
     "vcpkg"
 ]
-NUMBER_OF_PROJECTS = 1000
+NUMBER_OF_PROJECTS = 100
 
 
 def generate_pr_report(source_file_path, output_file_path, include_n_rows=NUMBER_OF_PROJECTS):
@@ -50,7 +50,7 @@ def main():
         print(f"Generating reports for: {pkg_manager}")
 
         path_to_source_file = os.path.join(args.input_directory, pkg_manager, f"nodes_{pkg_manager}.csv")
-        path_to_dest_file = os.path.join(args.output_directory, f"{pkg_manager}_top_{NUMBER_OF_PROJECTS}.csv")
+        path_to_dest_file = os.path.join(args.output_directory, "dasea", f"{pkg_manager}_top_{NUMBER_OF_PROJECTS}.csv")
 
         generation_start_time = time.time()
         generate_pr_report(path_to_source_file, path_to_dest_file)
