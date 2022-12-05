@@ -8,19 +8,19 @@ import time
 
 
 PKG_MANAGERS_LIST = [
-    "alire",
-    "cargo",          # something is off with this package manager, do not include it
-    "chromebrew",
-    "clojars",
-    "conan",
-    "fpm",
-    "homebrew",
-    "luarocks",
-    "nimble",
+    # "alire",
+    # "cargo",          # something is off with this package manager, do not include it
+    # "chromebrew",
+    # "clojars",
+    # "conan",
+    # "fpm",
+    # "homebrew",
+    # "luarocks",
+    # "nimble",
     "npm",              # speak with helge about it
     # "ports",
-    "rubygems",
-    "vcpkg"
+    # "rubygems",
+    # "vcpkg"
 ]
 
 
@@ -131,7 +131,7 @@ def export_edges_to_neo4j_csv(graph, pkg_manager, export_directory_path, nodes_e
 
 
 def _write_to_csv(rows, header, directory_path, file_name):
-    with open(os.path.join(directory_path, file_name), 'w+', encoding="utf-8") as file:
+    with open(os.path.join(directory_path, file_name), 'w+', encoding="utf-8", newline='') as file:
         writer = csv.writer(file)
 
         writer.writerow(header)

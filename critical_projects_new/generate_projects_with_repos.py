@@ -2,6 +2,8 @@ import argparse
 import os
 import time
 import pandas as pd
+import re
+import sys
 
 
 PKG_MANAGERS_LIST = [
@@ -23,14 +25,20 @@ PKG_MANAGERS_LIST = [
 
 def convert_repository(repo: str):
     if repo.__contains__("github") or repo.__contains__("gitlab"):
-        if repo.startswith("git+"):
-            repo = repo.lstrip("git+")
         if repo.endswith(".git"):
-            repo = repo.rstrip(".git")
+            repo = re.sub(r'.git$', '', repo)
         if repo.__contains__("/archive/"):
             repo = repo.split("/archive/")[0]
         if repo.__contains__("/releases/"):
             repo = repo.split("/releases/")[0]
+        if repo.startswith("git+ssh://git@"):
+            return re.sub(r'^git\+ssh://git@', '', repo)
+        if repo.startswith("git@github.com:"):
+            return repo.replace("git@github.com:", "github.com/")
+        if repo.startswith("git+"):
+            return re.sub(r'^git\+', '', repo)
+        if repo.startswith("git://"):
+            return re.sub(r'^git://', '', repo)
         return repo
     else:
         return None
